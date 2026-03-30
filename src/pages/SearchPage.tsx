@@ -1,19 +1,23 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 
 import { TextInput, Button, Group, AppShell } from '@mantine/core';
-import { useDebouncedCallback } from '@mantine/hooks';
+import { useDebouncedValue } from '@mantine/hooks';
 
 import { QueryBoundary, Header } from '@/components';
 import { useRepoSearch } from '@/hooks/useRepoSearch';
 
 export const SearchPage = () => {
-  const [query, setQuery] = useState('');
+  const [inputValue, setInputValue] = useState('');
+  const [debouncedQuery] = useDebouncedValue(inputValue, 500);
 
-  const { data, isError, isLoading } = useRepoSearch(query, 1);
+  const { data, isError, isLoading, isRefetching } = useRepoSearch(
+    debouncedQuery,
+    1,
+  );
 
-  const handleSearch = useDebouncedCallback(() => {
-    setQuery(query);
-  }, 500);
+  const handleSearch = useCallback(() => {
+    setInputValue(inputValue);
+  }, [inputValue]);
 
   return (
     <AppShell header={{ height: 48 }}>
@@ -25,12 +29,12 @@ export const SearchPage = () => {
           <Group>
             <TextInput
               placeholder="Search repositories..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
               style={{ flex: 1 }}
               onKeyDown={handleSearch}
             />
-            <Button onClick={handleSearch} loading={isLoading}>
+            <Button onClick={handleSearch} loading={isLoading || isRefetching}>
               Search
             </Button>
           </Group>
