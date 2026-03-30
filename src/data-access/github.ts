@@ -29,5 +29,19 @@ export async function searchRepositories(
     },
   );
 
+  if (response.status === 403 || response.status === 429) {
+    throw new Error(
+      `GitHub API rate limit exceeded. Please wait a moment and try again.`,
+    );
+  }
+
+  if (response.status === 422) {
+    throw new Error(`Invalid search query.`);
+  }
+
+  if (!response.ok) {
+    throw new Error(`GitHub API error: ${response.status}`);
+  }
+
   return response.json() as Promise<GitHubSearchResponse>;
 }
