@@ -9,12 +9,14 @@ export type QueryBoundaryProps<T> = {
   isLoading: boolean;
   /* Whether the query resulted in an error. */
   isError: boolean;
-  /* The error object if the query resulted in an error. Can be null if isError is false. */
-  error?: Error | null;
   /* Whether the query returned no data. This is separate from isError because an empty result can be a valid response (e.g. no repos found for a search term). */
   isEmpty?: boolean;
   /* Fallback content to render when the query returns no data. Defaults to a simple message. */
   emptyFallback?: ReactNode;
+  /* Fallback content to render when the query results in an error. Defaults to a simple alert. */
+  errorFallback?: ReactNode;
+  /* Fallback content to render when the query is loading. Defaults to a simple loader. */
+  loadingFallback?: ReactNode;
   /* A render prop that receives the query data and returns the content to render when the query is successful. */
   children: (data: T) => ReactNode;
 };
@@ -23,19 +25,19 @@ export function QueryBoundary<T>({
   data,
   isLoading,
   isError,
-  error,
   isEmpty,
   emptyFallback = <p>No results found.</p>,
+  errorFallback = (
+    <Alert color="red">An error occurred while fetching data.</Alert>
+  ),
+  loadingFallback = <Loader />,
   children,
 }: QueryBoundaryProps<T>) {
-  if (isLoading) return <Loader />;
+  if (isLoading) return loadingFallback;
 
-  if (isError)
-    return (
-      <Alert color="red">{error?.message ?? 'Something went wrong.'}</Alert>
-    );
+  if (isError) return errorFallback;
 
-  if (isEmpty || !data) return <>{emptyFallback}</>;
+  if (isEmpty || !data) return emptyFallback;
 
-  return <>{children(data)}</>;
+  return children(data);
 }

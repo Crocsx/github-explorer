@@ -1,7 +1,10 @@
 import type { Endpoints } from '@octokit/types';
 
-type GitHubSearchResponse =
+export type GitHubSearchResponse =
   Endpoints['GET /search/repositories']['response']['data'];
+
+export type Repository =
+  Endpoints['GET /search/repositories']['response']['data']['items'][number];
 
 export async function searchRepositories(
   query: string,
