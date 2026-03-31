@@ -45,7 +45,6 @@ export function useSearchState() {
 
   const handlePageChange = useCallback(
     (newPage: number) => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
       updateSearch({ page: newPage });
     },
     [updateSearch],

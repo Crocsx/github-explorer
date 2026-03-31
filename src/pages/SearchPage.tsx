@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 
 import {
   TextInput,
@@ -52,6 +52,10 @@ export const SearchPage = () => {
     });
 
   const clampedTotal = data ? Math.min(data.total_count, MAX_RESULTS) : 0;
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [page]);
 
   const onPageChange = (newPage: number) => {
     handlePageChange(newPage);
