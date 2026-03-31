@@ -118,7 +118,7 @@ function buildHeaders(): HeadersInit {
   return headers;
 }
 
-async function mapErrorResponse(response: Response): Promise<never> {
+export async function mapErrorResponse(response: Response): Promise<never> {
   if (response.status === 403 || response.status === 429) {
     const resetHeader = response.headers.get('X-RateLimit-Reset');
     const retryAfter = resetHeader
