@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { BrowserRouter } from 'react-router';
 
 import { MantineProvider } from '@mantine/core';
@@ -8,19 +9,30 @@ import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { NuqsAdapter } from 'nuqs/adapters/react-router/v7';
 
+import { ErrorBoundary } from '@/components';
 import { SearchPage } from '@/pages';
-
-const queryClient = new QueryClient();
 
 dayjs.extend(relativeTime);
 
 function App() {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          // Disable automatic retries to avoid hitting GitHub's rate limits
+          queries: { retry: false },
+        },
+      }),
+  );
+
   return (
     <BrowserRouter>
       <NuqsAdapter>
         <MantineProvider>
           <QueryClientProvider client={queryClient}>
-            <SearchPage />
+            <ErrorBoundary>
+              <SearchPage />
+            </ErrorBoundary>
             {import.meta.env.DEV && <ReactQueryDevtools />}
           </QueryClientProvider>
         </MantineProvider>
