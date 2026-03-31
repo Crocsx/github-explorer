@@ -2,9 +2,8 @@ import { Anchor, Badge, Card, Group, Stack, Text, Title } from '@mantine/core';
 import { IconBook, IconGitFork, IconStar } from '@tabler/icons-react';
 import dayjs from 'dayjs';
 
+import { LanguageBadge } from '@/components/language-badge';
 import type { Repository } from '@/data-access/github';
-
-import { LanguageBadge } from '../language-badge';
 
 export type RepositoryCardProps = {
   /*  The repository data to display in the card. */

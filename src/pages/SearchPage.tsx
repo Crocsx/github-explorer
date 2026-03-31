@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useRef } from 'react';
 
 import {
   TextInput,
@@ -8,14 +8,7 @@ import {
   Pagination,
   ActionIcon,
 } from '@mantine/core';
-import { useDebouncedCallback } from '@mantine/hooks';
 import { IconX } from '@tabler/icons-react';
-import {
-  parseAsInteger,
-  parseAsString,
-  parseAsStringEnum,
-  useQueryStates,
-} from 'nuqs';
 
 import {
   QueryBoundary,
@@ -26,21 +19,31 @@ import {
   RepositoryListLoader,
   LandingState,
 } from '@/components';
-import { MAX_RESULTS, PER_PAGE, SORT_VALUES } from '@/config/repository';
-import type { OrderOption, SortOption } from '@/data-access/github';
+import { MAX_RESULTS, PER_PAGE } from '@/config/repository';
 import { useRepoSearch } from '@/hooks/useRepoSearch';
-
-const searchParsers = {
-  keyword: parseAsString.withDefault(''),
-  page: parseAsInteger.withDefault(1),
-  sort: parseAsStringEnum<SortOption>(SORT_VALUES),
-  order: parseAsStringEnum<OrderOption>(['asc', 'desc']),
-};
+import { useSearchState } from '@/hooks/useSearchState';
 
 export const SearchPage = () => {
-  const [{ keyword, page, sort, order }, setSearchParams] =
-    useQueryStates(searchParsers);
-  const [inputValue, setInputValue] = useState(keyword);
+  const {
+    keyword,
+    page,
+    sort,
+    order,
+    inputValue,
+    setInputValue,
+    handlePageChange,
+    handleInputChange,
+    handleSearch,
+    clearSearch,
+    handleSortChange,
+    handleOrderChange,
+  } = useSearchState();
+
+  // tabIndex={-1} makes this div programmatically focusable so keyboard/screen
+  // reader users land on the new content after a page change rather than
+  // staying on the pagination control.
+  const resultsRef = useRef<HTMLDivElement>(null);
+
   const { data, isError, isLoading, isRefetching, isFetched, error } =
     useRepoSearch(keyword, page, {
       perPage: PER_PAGE,
@@ -48,53 +51,12 @@ export const SearchPage = () => {
       order,
     });
 
-  // Sync the controlled input when the user navigates back/forward in browser
-  // history — the URL keyword changes externally so the input must follow.
-  useEffect(() => {
-    setInputValue(keyword);
-  }, [keyword]);
+  const clampedTotal = data ? Math.min(data.total_count, MAX_RESULTS) : 0;
 
-  const updateSearch = useCallback(
-    (
-      params: Partial<{
-        keyword: string;
-        page: number;
-        sort: SortOption | null;
-        order: OrderOption | null;
-      }>,
-    ) => {
-      setSearchParams((prev) => ({ ...prev, ...params }));
-    },
-    [setSearchParams],
-  );
-
-  const resultsRef = useRef<HTMLDivElement>(null);
-
-  const handlePageChange = useCallback(
-    (newPage: number) => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      updateSearch({ page: newPage });
-      // Move focus to the top of results so keyboard/screen reader users
-      // land on the new content rather than staying on the pagination control.
-      resultsRef.current?.focus();
-    },
-    [updateSearch],
-  );
-
-  const handleInputChange = useDebouncedCallback(
-    (value: string) => updateSearch({ keyword: value, page: 1 }),
-    500,
-  );
-
-  const handleSearch = useCallback(() => {
-    handleInputChange.cancel();
-    updateSearch({ keyword: inputValue, page: 1 });
-  }, [handleInputChange, inputValue, updateSearch]);
-
-  const clearSearch = useCallback(() => {
-    setInputValue('');
-    updateSearch({ keyword: '', page: 1 });
-  }, [updateSearch]);
+  const onPageChange = (newPage: number) => {
+    handlePageChange(newPage);
+    resultsRef.current?.focus();
+  };
 
   return (
     <AppShell header={{ height: 48 }}>
@@ -119,7 +81,7 @@ export const SearchPage = () => {
                   <ActionIcon
                     onClick={clearSearch}
                     variant="outline"
-                    aria-label="Clear search Input"
+                    aria-label="Clear search input"
                   >
                     <IconX size={16} />
                   </ActionIcon>
@@ -130,7 +92,6 @@ export const SearchPage = () => {
               Search
             </Button>
           </Flex>
-          {/* tabIndex={-1} makes this div programmatically focusable for pagination focus management */}
           <div ref={resultsRef} tabIndex={-1} style={{ outline: 'none' }}>
             <QueryBoundary
               isLoading={isLoading}
@@ -147,22 +108,18 @@ export const SearchPage = () => {
                 <>
                   <RepositoryList
                     repos={result.items}
-                    totalCount={Math.min(result.total_count, MAX_RESULTS)}
+                    totalCount={clampedTotal}
                     sort={sort}
-                    onSortChange={(s) =>
-                      updateSearch({ sort: s, order: null, page: 1 })
-                    }
+                    onSortChange={handleSortChange}
                     order={order}
-                    onOrderChange={(o) => updateSearch({ order: o, page: 1 })}
+                    onOrderChange={handleOrderChange}
                   />
                   <Flex justify="center" mt="md" flex="1">
                     <Pagination
                       gap="lg"
-                      total={Math.ceil(
-                        Math.min(result.total_count, MAX_RESULTS) / PER_PAGE,
-                      )}
+                      total={Math.ceil(clampedTotal / PER_PAGE)}
                       value={page}
-                      onChange={handlePageChange}
+                      onChange={onPageChange}
                     />
                   </Flex>
                 </>

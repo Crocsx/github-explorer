@@ -38,6 +38,7 @@ export function RepositoryListHeader({
         <Select
           size="xs"
           data={SORT_OPTIONS}
+          aria-label="Sort repositories by"
           value={sort ?? ''}
           onChange={(v) => {
             onSortChange((v || null) as SortOption | null);

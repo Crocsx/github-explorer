@@ -82,6 +82,16 @@ if (!GITHUB_API_URL) {
 // Helpers
 // ============================================================================
 
+function isValidSearchResponse(data: unknown): data is GitHubSearchResponse {
+  return (
+    typeof data === 'object' &&
+    data !== null &&
+    'total_count' in data &&
+    'items' in data &&
+    Array.isArray((data as GitHubSearchResponse).items)
+  );
+}
+
 function buildSearchUrl(params: SearchRepositoriesParams): string {
   const searchParams = new URLSearchParams({
     q: params.query,
@@ -117,7 +127,9 @@ async function mapErrorResponse(response: Response): Promise<never> {
     throw new GitHubRateLimitError(retryAfter);
   }
   if (response.status === 422) {
-    const body = await response.json().catch(() => null);
+    const body = (await response.json().catch(() => null)) as {
+      message?: string;
+    } | null;
     throw new GitHubValidationError(body?.message);
   }
   throw new GitHubAPIError(response.status);
@@ -146,6 +158,9 @@ export async function searchRepositories(
     await mapErrorResponse(response);
   }
 
-  // We should add validation here to ensure the response matches our expected structure, but for simplicity we'll assume it does.
-  return response.json() as Promise<GitHubSearchResponse>;
+  const data = await response.json();
+  if (!isValidSearchResponse(data)) {
+    throw new GitHubAPIError(200);
+  }
+  return data;
 }
