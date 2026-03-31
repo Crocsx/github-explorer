@@ -43,10 +43,9 @@ export function QueryBoundary<T>({
 
   if (isError) return errorFallback;
 
-  if (isEmpty || !data) {
-    if (isFetched === false && landingFallback != null) return landingFallback;
-    return emptyFallback;
-  }
+  if (!isFetched && !data) return landingFallback;
+
+  if (isEmpty || !data) return emptyFallback;
 
   return children(data);
 }

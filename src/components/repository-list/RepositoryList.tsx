@@ -1,17 +1,36 @@
 import { SimpleGrid } from '@mantine/core';
 
-import type { Repository } from '@/data-access/github';
+import type { OrderOption, Repository, SortOption } from '@/data-access/github';
 
 import { RepositoryCard } from './RepositoryCard';
+import { RepositoryListHeader } from './RepositoryListHeader';
 
 export type RepositoryListProps = {
-  /* The list of repositories to display. */
   repos: Repository[];
+  totalCount: number;
+  sort: SortOption | null;
+  onSortChange: (sort: SortOption | null) => void;
+  order: OrderOption | null;
+  onOrderChange: (order: OrderOption) => void;
 };
 
-export function RepositoryList({ repos }: RepositoryListProps) {
+export function RepositoryList({
+  repos,
+  totalCount,
+  sort,
+  onSortChange,
+  order,
+  onOrderChange,
+}: RepositoryListProps) {
   return (
     <SimpleGrid>
+      <RepositoryListHeader
+        totalCount={totalCount}
+        sort={sort}
+        onSortChange={onSortChange}
+        order={order}
+        onOrderChange={onOrderChange}
+      />
       {repos.map((repo) => (
         <RepositoryCard key={repo.id} repo={repo} />
       ))}

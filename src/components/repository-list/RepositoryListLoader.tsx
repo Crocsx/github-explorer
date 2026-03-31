@@ -1,4 +1,4 @@
-import { Card, Group, SimpleGrid, Skeleton, Stack } from '@mantine/core';
+import { Card, Flex, Group, SimpleGrid, Skeleton, Stack } from '@mantine/core';
 
 export type RepositoryListLoaderProps = {
   /* The number of skeleton cards to display while loading. Defaults to 6. */
@@ -8,6 +8,13 @@ export type RepositoryListLoaderProps = {
 export function RepositoryListLoader({ count = 6 }: RepositoryListLoaderProps) {
   return (
     <SimpleGrid>
+      <Flex justify="space-between" align="center">
+        <Skeleton height={14} width={120} radius="sm" />
+        <Flex gap="xs" align="center">
+          <Skeleton height={28} width={160} radius="sm" />
+          <Skeleton circle height={28} width={28} />
+        </Flex>
+      </Flex>
       {Array.from({ length: count }).map((_, i) => (
         <Card key={i} withBorder padding="md" radius="md">
           <Stack gap="xs">
