@@ -119,13 +119,20 @@ function buildHeaders(): HeadersInit {
 }
 
 export async function mapErrorResponse(response: Response): Promise<never> {
-  if (response.status === 403 || response.status === 429) {
+  if (
+    response.status === 429 ||
+    (response.status === 403 &&
+      response.headers.get('X-RateLimit-Remaining') === '0')
+  ) {
     const resetHeader = response.headers.get('X-RateLimit-Reset');
     const retryAfter = resetHeader
       ? new Date(Number(resetHeader) * 1000)
       : undefined;
     throw new GitHubRateLimitError(retryAfter);
+  } else if (response.status === 403) {
+    throw new GitHubAPIError(403);
   }
+
   if (response.status === 422) {
     const body = (await response.json().catch(() => null)) as {
       message?: string;

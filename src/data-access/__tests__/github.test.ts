@@ -29,12 +29,21 @@ describe('mapErrorResponse', () => {
       );
     });
 
-    it('throws GitHubRateLimitError for 403', async () => {
-      // NOTE: 403 also covers invalid tokens and permission errors.
-      // A future fix should inspect X-RateLimit-Remaining to distinguish.
-      await expect(mapErrorResponse(makeResponse(403))).rejects.toBeInstanceOf(
+    it('throws GitHubRateLimitError for 403 when X-RateLimit-Remaining is 0', async () => {
+      const response = makeResponse(403, {
+        headers: { 'X-RateLimit-Remaining': '0' },
+      });
+      await expect(mapErrorResponse(response)).rejects.toBeInstanceOf(
         GitHubRateLimitError,
       );
+    });
+
+    it('throws GitHubAPIError for 403 when X-RateLimit-Remaining is not 0', async () => {
+      const error = await mapErrorResponse(makeResponse(403)).catch(
+        (e) => e as GitHubAPIError,
+      );
+      expect(error).toBeInstanceOf(GitHubAPIError);
+      expect(error.statusCode).toBe(403);
     });
 
     it('parses X-RateLimit-Reset header into retryAfter', async () => {
